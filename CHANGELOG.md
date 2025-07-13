@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2025-07-13
+
+### Enhanced
+- **backtest.py**: Overhauled backtest logic with full capital and exposure tracking.
+  - Introduced dynamic position sizing proportional to signal strength.
+  - Added capital-aware PnL calculation and cumulative growth.
+  - Output includes spread, z-score, signal, position size, exposure, PnL, and capital trajectory.
+
+- **main.py**: Updated execution script to:
+  - Plot **capital** trajectory instead of raw cumulative PnL.
+  - Compute and display **Sharpe Ratio**, **Max Drawdown**, **Win Ratio**, and **Trade Count**.
+  - Handles data gaps more gracefully; cleaner pipeline from data to metrics.
+
+- **loader.py**: Hardened price download routine.
+  - Retries failed tickers up to 3 times.
+  - Excludes unrecoverable tickers from the final dataframe instead of failing the pipeline.
+  - Ensures pipeline resilience during partial or unstable data fetches.
+
+### Notes
+- Pipeline now returns a **fully capital-aware trading simulation**, setting up the foundation for execution modeling (slippage, txn costs, leverage).
+- `main.py` executes cleanly even if some tickers fail to download — fallback mechanisms and index alignment are now robust.
+- Visual output now better represents **actual strategy growth** under realistic constraints (capital-based scaling and reinvestment).
+
+### Next
+- **Execution modeling**: Add per-trade slippage and transaction costs into backtest engine.
+- **Exposure constraints**: Introduce leverage cap, position limits, and optional stop-loss logic.
+- **Multi-pair support**: Generalize engine to backtest and compare top cointegrated pairs in batch mode.
+- **Event tagging**: Annotate entry, exit, and stop-loss points in time-series for trade traceability.
+
 
 ## [0.2.0] - 2025-07-12
 

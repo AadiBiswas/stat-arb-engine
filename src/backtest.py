@@ -1,45 +1,63 @@
+#===== backtest.py =====#
+
 import numpy as np
 import pandas as pd
 
-def backtest_pair(series1, series2, signals, beta, capital_base=1_000_000, risk_aversion=1.0):
+def backtest_pair(
+    series1, series2, signals, beta, 
+    capital_base=1_000_000, 
+    risk_aversion=1.0,
+    slippage_pct=0.0005,               # 5 bps slippage (0.05%)
+    transaction_cost_pct=0.001         # 10 bps cost (0.10%)
+):
     """
-    Backtest a mean-reversion strategy with dynamic position sizing.
-    
+    Backtest a mean-reversion strategy with dynamic position sizing and realistic execution costs.
+
     Args:
         series1 (pd.Series): Price series of asset A
         series2 (pd.Series): Price series of asset B
         signals (pd.Series): 1 = long spread, -1 = short spread, 0 = neutral
         beta (float): Hedge ratio
         capital_base (float): Starting capital in USD
-        risk_aversion (float): Higher = smaller positions for same z-score
-    
+        risk_aversion (float): Higher = smaller positions
+        slippage_pct (float): Slippage applied on each trade (%)
+        transaction_cost_pct (float): Transaction cost per trade (%)
+
     Returns:
-        pd.DataFrame: Results with spread, signals, PnL, capital, and sizing data
+        pd.DataFrame: Includes spread, signals, exposure, capital, and execution-aware PnL
     """
     # Align signals to index
     signals = signals[-len(series1):]
     signals = signals.reindex(series1.index)
 
-    # Build spread and daily change
+    # Spread = A - beta * B
     spread = series1 - beta * series2
     spread_returns = spread.diff()
 
-    # Rolling statistics for volatility and z-score
+    # Rolling stats and z-score
     spread_mean = spread.rolling(20).mean()
     spread_std = spread.rolling(20).std()
-    zscore = (spread - spread_mean) / spread_std
+    zscore = (spread - spread_mean) / (spread_std + 1e-6)
     zscore.fillna(0, inplace=True)
 
-    # Position size ∝ |zscore| / volatility, adjusted by risk aversion
+    # Position size ∝ |zscore| / volatility (scaled by risk_aversion)
     volatility = spread_std.bfill()
     position_size = (np.abs(zscore) / (volatility + 1e-6)) / risk_aversion
-    position_size = position_size.clip(upper=2.0)  # Max leverage = 2x capital
+    position_size = position_size.clip(upper=2.0)
 
-    # Directional exposure = position size × signal direction
+    # Exposure = size × direction
     directional_exposure = position_size * signals
 
-    # PnL = previous exposure × Δspread
-    pnl = directional_exposure.shift().fillna(0) * spread_returns
+    # Detect trades
+    trade_indicator = directional_exposure.diff().fillna(0) != 0
+
+    # Execution costs per trade: slippage + transaction cost
+    execution_cost = trade_indicator.astype(float) * (
+        np.abs(directional_exposure) * (slippage_pct + transaction_cost_pct)
+    )
+
+    # PnL = Previous exposure × Δspread - execution costs
+    pnl = directional_exposure.shift().fillna(0) * spread_returns - execution_cost
     capital = capital_base + pnl.cumsum()
 
     results = pd.DataFrame({
@@ -57,7 +75,7 @@ def backtest_pair(series1, series2, signals, beta, capital_base=1_000_000, risk_
 
 def compute_metrics(results):
     """
-    Compute common performance metrics from backtest results.
+    Compute key performance metrics from execution-aware results.
     """
     daily_returns = results["PnL"].dropna()
     cumulative = results["Capital"] if "Capital" in results else results["CumulativePnL"]

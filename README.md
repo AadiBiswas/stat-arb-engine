@@ -5,6 +5,13 @@
 ## Overview  
 This project implements a scalable, modular **statistical arbitrage engine** for cointegrated pairs. Designed for both **academic research** and **pre-production simulation**, it identifies trading opportunities across historical data and backtests mean-reversion strategies with full risk and return metrics.
 
+
+## Goals
+- Design modular framework for pair trading strategy simulation.
+- Develop interpretable backtest metrics to compare pair performance.
+- Extend toward ML-based pair scoring and live execution.
+- Optimize for clarity, reproducibility, and extensibility.
+
 ## Pipeline Architecture  
 - **Price Loader**: Downloads and preprocesses historical adjusted-close data.
 - **Cointegration Scanner**: Applies Engle-Granger tests across all pair combinations.
@@ -31,6 +38,37 @@ This project implements a scalable, modular **statistical arbitrage engine** for
 - **ML Meta-Models**: Predict regime shifts, pair success probability, or signal strength.
 - **Live Execution Hooks**: Integration with Alpaca, Polygon, or Binance for real-time simulation.
 
+## HOW TO RUN BACKTESTS FROM TERMINAL:
+
+- **Step 1**: Activate your virtual environment  
+  ```bash
+  source venv/bin/activate
+
+- **Step 2a**: Run the main engine with default parameters (no flags needed)
+  ```bash
+  python main.py
+
+- **Step 2b**: Or, configure your own backtest with CLI arguments
+  ```bash
+  python main.py \
+  --capital 1000000 \
+  --slippage 0.0005 \
+  --txn_cost 1.00 \
+  --risk_aversion 1.0 \
+  --tickers AAPL MSFT NVDA META
+
+- **Arguments (Step 2b):**
+
+    --`capital`: Initial capital base (e.g. `1_000_000`)
+
+    --`slippage`: Per-unit slippage cost (e.g. `0.0005` for 5bps)
+
+    --`txn_cost`: Flat transaction cost per trade (e.g. `$1.00`)
+
+    --`risk_aversion`: Higher means smaller positions for same z-score
+
+    --`tickers`: Override default ticker list with custom selection
+
 ## Sample Output
 
 ```
@@ -46,12 +84,6 @@ Date
 2023-12-29  -6.536485     -1.0  1.661111     132.244145
 
 ```
-
-## Goals
-- Design modular framework for pair trading strategy simulation.
-- Develop interpretable backtest metrics to compare pair performance.
-- Extend toward ML-based pair scoring and live execution.
-- Optimize for clarity, reproducibility, and extensibility.
 
 ## License  
 MIT License.

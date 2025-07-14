@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2025-07-13
+
+### Enhanced
+- **backtest.py**:
+  - Added **slippage** and **transaction cost modeling** to simulate execution-aware PnL.
+  - Incorporated **capital base**, **risk aversion**, and **dynamic position sizing**.
+  - Exposure now reflects leverage-adjusted directional positions; max leverage capped at 2× by default.
+
+- **main.py**:
+  - Introduced **CLI support** using `argparse`; allows user to control:
+    - `--capital` (starting capital),
+    - `--slippage` (bps per unit),
+    - `--txn_cost` (per-trade cost),
+    - `--risk_aversion` (position scaling),
+    - `--tickers` (custom list override).
+  - Gracefully handles empty dataframes or failed ticker fetches.
+  - Capital trajectory is now plotted instead of naive cumulative PnL.
+
+### Notes
+- This release simulates a **realistic execution model** — incorporating both trading frictions and capital constraints.
+- Position size scales dynamically with spread z-score, bounded by volatility and user risk aversion.
+- CLI interface enables batch testing and fine-grained control, supporting future experiment logging and automation.
+- Slippage and costs are parameterized and easy to extend for future improvements.
+
+### Next
+- **Exposure Constraints**: Add upper/lower bounds on long/short position exposure.
+- **Event Tagging**: Record entry/exit/stop-loss timestamps and triggers in results.
+- **Trade Logger**: Save detailed trade ledger (entry/exit prices, timestamps, size) for traceability.
+- **Multi-Pair Backtesting**: Generalize to evaluate and rank top N cointegrated pairs.
+
+
 ## [0.3.0] - 2025-07-13
 
 ### Enhanced

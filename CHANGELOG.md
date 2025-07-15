@@ -2,7 +2,52 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.0] - 2025-07-13
+## [0.5.0] - 2025-07-15
+
+### Enhanced
+
+- **backtest.py**:
+  - Added **long/short exposure limits** via `max_leverage` cap.
+  - Implemented **event tagging**: each trade is labeled as "Entry", "Exit", or "StopLoss".
+  - Integrated **stop-loss logic**, triggered if PnL falls below a capital-relative threshold.
+  - Exposure logic now includes directional sizing with risk-adjusted scaling and tagged triggers.
+  - Appends **event column** to backtest result, improving traceability of strategy behavior.
+
+- **main.py**:
+  - CLI now supports:
+    - `--capital`: Starting capital for simulation
+    - `--risk`: Risk aversion factor (higher = smaller positions)
+    - `--slippage`: Execution slippage per trade
+    - `--txn_cost`: Transaction cost per trade
+    - `--max_leverage`: Limit on position exposure
+    - `--stop_loss`: Optional stop-loss threshold
+  - Prints a **trade event summary** including entries, exits, and stops.
+  - CLI-based config enables easy experimentation with strategy parameters.
+
+### Notes
+
+- All core mechanics of **Phase 2** have now been implemented:
+  - ✅ Capital tracking and leverage limits
+  - ✅ Transaction cost and slippage modeling
+  - ✅ Performance metrics including Sharpe, Drawdown, Win Ratio, Trade Count
+  - ✅ New: Exposure limits, Stop-loss logic, Event tagging
+
+- The engine can now simulate realistic capital usage with traceable, event-driven trade annotations — a prerequisite for robust statistical arbitrage evaluation.
+
+### Next
+
+We now enter **Phase 3**, which will include:
+
+- **Batch Simulation**: Run all cointegrated pairs in parallel
+-  **Strategy Ranking**: Score based on Sharpe, CAGR, Drawdown, etc.
+- **Config-Driven Runs**: Optional YAML/JSON config or CLI flags to control:
+  - Lookback window
+  - Z-score thresholds
+  - Position sizing logic
+- **Result Export**: Save ranked result table as CSV and/or styled HTML for analysis and presentation
+
+
+## [0.4.0] - 2025-07-14
 
 ### Enhanced
 - **backtest.py**:

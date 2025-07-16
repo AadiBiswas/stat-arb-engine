@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2025-07-16
+
+### Added
+- **config.py**:
+  - Introduced `load_config()` to ingest JSON-based experiment definitions.
+  - Allows full override of CLI defaults; supports hybrid use.
+  - Enables reproducible strategy experimentation via named config files.
+
+- **export.py**:
+  - Added CSV + HTML export module.
+  - Saves strategy summary (Sharpe, CAGR, Drawdown, Win Ratio, etc.) for all backtested pairs.
+  - Ensures results are human-readable and easy to share/analyze externally.
+
+- **config.json**:
+  - Sample config file added in root directory to define:
+    - `tickers`, `capital`, `risk_aversion`, `slippage`, `txn_cost`,
+    - `max_leverage`, `stop_loss`, `significance`, and `top_n`.
+
+### Enhanced
+- **main.py**:
+  - Refactored for **batch backtesting** of all cointegrated pairs.
+  - Displays top `N` strategies sorted by Sharpe Ratio.
+  - Plots capital trajectory for best-performing pair.
+  - Accepts both `--config config.json` and CLI-based argument overrides.
+  - Saves strategy summary to `results/strategy_summary.csv` and `strategy_summary.html`.
+
+### Notes
+- This release completes **Phase 3**: moving from single-pair evaluation to **multi-pair experimentation** and reporting.
+- Output can now be piped into spreadsheets or dashboards for quant research comparison.
+
+### Next
+- **Phase 4: Strategy Enhancements**
+  - Execution modeling: simulate bid/ask fills, partial fills, queue slippage.
+  - Regime switching: incorporate volatility clustering or macro signals.
+  - Stop-loss/take-profit refinement: configurable triggers.
+  - ML/optimizer-based parameter sweeps to tune thresholds (e.g., z-score entry).
+  - Strategy ledger: track trades, entry/exit tags, and mark-to-market exposure across time.
+
+
 ## [0.5.0] - 2025-07-15
 
 ### Enhanced

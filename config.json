@@ -1,0 +1,11 @@
+{
+  "tickers": ["AAPL", "MSFT", "GOOG", "META", "NVDA", "AMD", "INTC", "QCOM", "TSLA"],
+  "capital": 1000000,
+  "risk_aversion": 1.0,
+  "slippage": 0.0005,
+  "txn_cost": 0.001,
+  "max_leverage": 2.0,
+  "stop_loss": null,
+  "significance": 0.1,
+  "top_n": 3
+}

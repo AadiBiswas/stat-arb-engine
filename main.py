@@ -1,35 +1,34 @@
 import argparse
 import pandas as pd
+import os
+import matplotlib.pyplot as plt
+
 from src.loader import download_prices
 from src.coint import find_cointegrated_pairs
 from src.strategy import compute_spread, generate_signals
 from src.backtest import backtest_pair, compute_metrics
-import matplotlib.pyplot as plt
+from src.config import load_config
+from src.export import save_trade_log, save_full_results, save_summary_table
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Statistical Arbitrage Backtest Runner")
-    parser.add_argument("--capital", type=float, default=1_000_000, help="Initial capital base")
-    parser.add_argument("--risk", type=float, default=1.0, help="Risk aversion (higher = smaller exposure)")
-    parser.add_argument("--slippage", type=float, default=0.0005, help="Slippage as decimal (e.g. 0.001 = 10bps)")
-    parser.add_argument("--txn_cost", type=float, default=0.001, help="Txn cost as decimal (e.g. 0.001 = 10bps)")
-    parser.add_argument("--max_leverage", type=float, default=2.0, help="Maximum leverage (position size cap)")
-    parser.add_argument("--stop_loss", type=float, default=None, help="Optional stop-loss as decimal (e.g. 0.05 = 5%)")
+    parser.add_argument("--config", type=str, default="config.json", help="Path to experiment config JSON")
     args = parser.parse_args()
 
-    tickers = ["AAPL", "MSFT", "GOOG", "META", "NVDA", "AMD", "INTC", "QCOM", "TSLA"]
+    config = load_config(args.config)
+
+    tickers = config.get("tickers", [])
+    top_n = config.get("top_n", 3)
     df = download_prices(tickers)
 
-    # ✅ Ensure datetime index
     if not isinstance(df.index, pd.DatetimeIndex):
         df.index = pd.to_datetime(df.index)
-
-    print("Sample Prices:\n", df.head())
 
     if df.empty:
         print("Price data download failed. Please check ticker list or internet connection.")
         exit()
 
-    coint_pairs = find_cointegrated_pairs(df, significance=0.1)
+    coint_pairs = find_cointegrated_pairs(df, significance=config.get("significance", 0.1))
     print("\nCointegrated Pairs:")
     for pair in coint_pairs:
         print(pair)
@@ -38,42 +37,67 @@ if __name__ == "__main__":
         print("\nNo cointegrated pairs found. Try adjusting threshold or ticker set.")
         exit()
 
-    A, B, _ = coint_pairs[0]
-    series_A = df[A]
-    series_B = df[B]
+    results_list = []
+    summary_rows = []
 
-    spread, beta = compute_spread(series_A, series_B)
-    signals = generate_signals(spread)
+    for A, B, pval in coint_pairs:
+        try:
+            series_A = df[A]
+            series_B = df[B]
+            spread, beta = compute_spread(series_A, series_B)
+            signals = generate_signals(spread)
 
-    results = backtest_pair(
-        series_A, series_B, signals, beta,
-        capital_base=args.capital,
-        risk_aversion=args.risk,
-        slippage_pct=args.slippage,
-        transaction_cost_pct=args.txn_cost,
-        max_leverage=args.max_leverage,
-        stop_loss_pct=args.stop_loss
-    )
+            results = backtest_pair(
+                series_A, series_B, signals, beta,
+                capital_base=config.get("capital", 1_000_000),
+                risk_aversion=config.get("risk_aversion", 1.0),
+                slippage_pct=config.get("slippage", 0.0005),
+                transaction_cost_pct=config.get("txn_cost", 0.001),
+                max_leverage=config.get("max_leverage", 2.0),
+                stop_loss_pct=config.get("stop_loss", None)
+            )
 
-    # ✅ Confirm index type for proper CAGR logic
-    if not isinstance(results.index, pd.DatetimeIndex):
-        print("\n[Warning] Result index is not datetime. Setting it from price series...")
-        results.index = series_A.index[1:]  # Align with price series (skip 1 for diff)
+            if not isinstance(results.index, pd.DatetimeIndex):
+                results.index = series_A.index[1:]
 
-    print("\nBacktest Results (Last 5 Rows):\n", results.tail())
+            metrics = compute_metrics(results)
+            metrics.update({
+                "Pair": f"{A}/{B}",
+                "Beta": round(beta, 4),
+                "P-Value": round(pval, 4)
+            })
 
-    trade_events = results[results["Event"].notna()]
-    print(f"\nTrade Events Summary (First 5 rows):\n{trade_events.head()}")
+            summary_rows.append(metrics)
+            results_list.append((f"{A}_{B}", results))
 
-    results["Capital"].plot(title=f"Capital Trajectory: {A} vs {B}", figsize=(10, 5))
-    plt.xlabel("Date")
-    plt.ylabel("Capital")
-    plt.grid(True)
-    plt.tight_layout()
+            save_trade_log(results, f"{A}_{B}")
+            save_full_results(results, f"{A}_{B}")
 
-    metrics = compute_metrics(results)
-    print("\nPerformance Metrics:")
-    for k, v in metrics.items():
-        print(f"{k}: {v}")
+        except Exception as e:
+            print(f"[Error] Backtest failed for pair {A}/{B}: {e}")
+
+    if not summary_rows:
+        print("No backtests succeeded.")
+        exit()
+
+    summary_df = pd.DataFrame(summary_rows)
+    summary_df.sort_values(by="Sharpe Ratio", ascending=False, inplace=True)
+    top_df = summary_df.head(top_n)
+
+    print("\nTop Strategies:")
+    print(top_df[["Pair", "Sharpe Ratio", "CAGR (%)", "Max Drawdown", "Total Return (%)"]])
+
+    top_pair = top_df.iloc[0]["Pair"]
+    for name, res in results_list:
+        if name.replace("/", "_") == top_pair.replace("/", "_"):
+            res["Capital"].plot(title=f"Top Strategy Capital Trajectory: {top_pair}", figsize=(10, 5))
+            plt.xlabel("Date")
+            plt.ylabel("Capital")
+            plt.grid(True)
+            plt.tight_layout()
+            break
+
+    save_summary_table(summary_df, fmt="csv")
+    save_summary_table(summary_df, fmt="html")
 
     plt.show()

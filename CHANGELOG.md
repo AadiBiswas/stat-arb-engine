@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2025-07-17
+
+### Added
+- **features.py**:
+  - New feature engineering module for ML-based strategy modeling.
+  - Extracts per-pair metrics including:
+    - Spread volatility and mean-reversion strength
+    - Signal statistics (mean, std, zero-crossing rate)
+    - Hedge ratio (beta), ADF statistic, and p-value
+  - Enables integration with supervised/unsupervised models in future phases.
+
+- **supervised_model.py**:
+  - Scaffold for machine learning classifier to predict strategy success.
+  - Prepares integration for XGBoost, Random Forest, or other model types.
+  - Designed to consume `results/features.csv` and return probabilities or regime predictions.
+
+### Enhanced
+- **main.py**:
+  - Embedded feature extraction directly into cointegrated-pair backtesting loop.
+  - For each pair, in addition to summary metrics:
+    - Extracts model-ready features
+    - Stores all features in `results/features.csv` for training/testing ML models.
+  - All outputs remain consistent:
+    - `strategy_summary.csv` + `.html` (metrics)
+    - `features.csv` (ML)
+    - `trade_logs/`, `full_results/` (granular records)
+
+### Notes
+- This marks the completion of **Phase 4.1**:
+  - Transforming historical simulation into a **meta-learning pipeline**.
+  - The engine now supports research into **predictive regime classification**, **alpha filtering**, and strategy gating using features.
+
+### Next
+- **Phase 4.2–4.4: Meta-Quant Intelligence**
+  - Train supervised model to predict Sharpe ratio success or classify good/bad regimes.
+  - Use model predictions to **filter, weight, or toggle** strategies in deployment.
+  - Add CLI or config flag to activate `supervised_model.py` at runtime.
+  - Future extension: Use unsupervised clustering (e.g., KMeans, GMM) for **regime detection** or **market structure labeling**.
+
+
 ## [0.6.0] - 2025-07-16
 
 ### Added

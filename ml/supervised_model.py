@@ -1,10 +1,11 @@
-# ml/supervised_model.py
 import pandas as pd
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 import joblib
+import os
 
+MODEL_PATH = "models/rf_model.pkl"
 
 def load_data(feature_path="results/features.csv", label_path="results/strategy_summary.csv", label_metric="Sharpe Ratio", threshold=1.0):
     """
@@ -21,8 +22,7 @@ def load_data(feature_path="results/features.csv", label_path="results/strategy_
 
     return X, y, merged
 
-
-def train_random_forest(X, y, save_path="models/rf_model.pkl"):
+def train_random_forest(X, y, save_path=MODEL_PATH):
     clf = RandomForestClassifier(n_estimators=100, random_state=42)
     scores = cross_val_score(clf, X, y, cv=5)
     print(f"Cross-validated accuracy: {scores.mean():.4f}")
@@ -32,7 +32,6 @@ def train_random_forest(X, y, save_path="models/rf_model.pkl"):
     print(f"[Saved] RandomForest model to {save_path}")
     return clf
 
-
 def evaluate_model(clf, X, y):
     y_pred = clf.predict(X)
     print("\nConfusion Matrix:")
@@ -40,7 +39,16 @@ def evaluate_model(clf, X, y):
     print("\nClassification Report:")
     print(classification_report(y, y_pred))
 
+def predict_success(features_df, model_path=MODEL_PATH):
+    if not os.path.exists(model_path):
+        print("[Warning] No trained model found. Skipping prediction.")
+        return pd.Series([1.0] * len(features_df))  # assume full success
 
+    clf = joblib.load(model_path)
+    X = features_df.drop(columns=["Pair"], errors="ignore")
+    probas = clf.predict_proba(X)[:, 1]
+    return pd.Series(probas, index=features_df.index)
+    
 if __name__ == "__main__":
     X, y, merged = load_data(threshold=1.0)
     clf = train_random_forest(X, y)

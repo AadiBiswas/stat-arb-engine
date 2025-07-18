@@ -9,7 +9,8 @@ from src.strategy import compute_spread, generate_signals
 from src.backtest import backtest_pair, compute_metrics
 from src.config import load_config
 from src.export import save_trade_log, save_full_results, save_summary_table
-from src.features import extract_features  # ← new ML feature extractor
+from src.features import extract_features
+from ml.supervised_model import predict_success  # <- ML model prediction
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Statistical Arbitrage Backtest Runner")
@@ -23,7 +24,6 @@ if __name__ == "__main__":
     top_n = config.get("top_n", 3)
     df = download_prices(tickers)
 
-    # Ensure datetime index for later CAGR/drawdown calculations
     if not isinstance(df.index, pd.DatetimeIndex):
         df.index = pd.to_datetime(df.index)
 
@@ -43,9 +43,8 @@ if __name__ == "__main__":
 
     results_list = []
     summary_rows = []
-    feature_rows = []  # ← store ML feature vectors
+    feature_rows = []
 
-    # Step 2: Backtest each cointegrated pair
     for A, B, pval in coint_pairs:
         try:
             series_A = df[A]
@@ -66,7 +65,6 @@ if __name__ == "__main__":
             if not isinstance(results.index, pd.DatetimeIndex):
                 results.index = series_A.index[1:]
 
-            # Step 3: Compute performance metrics
             metrics = compute_metrics(results)
             metrics.update({
                 "Pair": f"{A}/{B}",
@@ -74,7 +72,6 @@ if __name__ == "__main__":
                 "P-Value": round(pval, 4)
             })
 
-            # Step 4: Extract ML features
             features = extract_features(series_A, series_B, spread, signals, beta, pval)
             features["Pair"] = f"{A}/{B}"
 
@@ -92,18 +89,21 @@ if __name__ == "__main__":
         print("No backtests succeeded.")
         exit()
 
-    # Step 5: Construct performance and feature tables
+    # Construct results table
     summary_df = pd.DataFrame(summary_rows)
     feature_df = pd.DataFrame(feature_rows)
 
-    # Step 6: Rank by Sharpe and show top N
-    summary_df.sort_values(by="Sharpe Ratio", ascending=False, inplace=True)
+    # Predict ML success probability for each strategy
+    success_probas = predict_success(feature_df)
+    summary_df["ML_Predicted_Success_Prob"] = success_probas
+
+    # Sort using ML and Sharpe
+    summary_df.sort_values(by=["ML_Predicted_Success_Prob", "Sharpe Ratio"], ascending=False, inplace=True)
     top_df = summary_df.head(top_n)
 
     print("\nTop Strategies:")
-    print(top_df[["Pair", "Sharpe Ratio", "CAGR (%)", "Max Drawdown", "Total Return (%)"]])
+    print(top_df[["Pair", "Sharpe Ratio", "ML_Predicted_Success_Prob", "CAGR (%)", "Max Drawdown", "Total Return (%)"]])
 
-    # Step 7: Plot best strategy's capital curve
     top_pair = top_df.iloc[0]["Pair"]
     for name, res in results_list:
         if name.replace("/", "_") == top_pair.replace("/", "_"):
@@ -114,7 +114,7 @@ if __name__ == "__main__":
             plt.tight_layout()
             break
 
-    # Step 8: Save all results to disk
+    # Save outputs
     os.makedirs("results", exist_ok=True)
     save_summary_table(summary_df, fmt="csv")
     save_summary_table(summary_df, fmt="html")

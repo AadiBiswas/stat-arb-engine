@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1] - 2025-07-18
+
+### Added
+- **requirements.txt**:
+  - Added `scikit-learn`, `joblib`, `matplotlib`, and `pandas` to support supervised learning.
+  - Enables model training, evaluation, and integration into the main stat-arb pipeline.
+
+### Enhanced
+- **main.py**:
+  - Integrated trained classifier (`models/rf_model.pkl`) into execution pipeline:
+    - Loads model if available.
+    - Computes success probability (`P(Success)`) for each pair and appends it to summary output.
+    - Handles missing model gracefully without halting pipeline.
+  - Summary output (`strategy_summary.csv` and `.html`) now includes ML prediction.
+
+- **supervised_model.py**:
+  - Enhanced to support **inference mode**:
+    - Loads features and labels from disk.
+    - Applies pre-trained model to compute classification accuracy and predict success.
+    - Prints full classification report and confusion matrix.
+
+### Notes
+- This completes **Phase 4.2: Supervised Prediction Layer**.
+- The pipeline now supports end-to-end **meta-quant feedback**:
+  - Extracts features → trains classifier → scores strategies.
+- Probabilities can now be used for **strategy gating**, **weighting**, or **ranking enhancements**.
+
+### Next
+- **Phase 4.3–4.4: Regime Detection + Strategy Switching**
+  - Integrate clustering (e.g., KMeans, GMM) for unsupervised regime segmentation.
+  - Add regime classifiers to determine when specific pairs or strategy types should be active/inactive.
+  - Optional config flag to toggle supervised prediction, filtering, or model retraining from CLI.
+  - Later extension: XGBoost classifier and hyperparameter optimization for higher prediction accuracy.
+
+
 ## [0.7.0] - 2025-07-17
 
 ### Added

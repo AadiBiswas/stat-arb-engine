@@ -1,0 +1,10 @@
+pandas
+numpy
+matplotlib
+scipy
+statsmodels
+scikit-learn
+xgboost
+yfinance
+tabulate   # for cleaner CLI tables
+seaborn    # if plotting enhancements are planned

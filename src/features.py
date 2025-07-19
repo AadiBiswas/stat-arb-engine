@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 
-def extract_features(series1, series2, spread, zscore, beta, pval):
+def extract_features(series1, series2, spread, zscore, beta, pval, regime=None):
     """
     Generate ML-ready features from spread and series pair.
+    Optionally tag with regime if provided.
     """
     volatility = spread.rolling(20).std().iloc[-1]
     mean_zscore = zscore.mean()
@@ -13,7 +14,7 @@ def extract_features(series1, series2, spread, zscore, beta, pval):
     z_crosses = ((zscore.shift(1) * zscore) < 0).sum()  # sign flips = mean crossings
     half_life = estimate_half_life(spread)
 
-    return {
+    features = {
         "Volatility": round(volatility, 4),
         "MeanZ": round(mean_zscore, 4),
         "StdZ": round(std_zscore, 4),
@@ -24,6 +25,11 @@ def extract_features(series1, series2, spread, zscore, beta, pval):
         "Beta": round(beta, 4),
         "P-Value": round(pval, 4),
     }
+
+    if regime is not None:
+        features["Regime"] = regime
+
+    return features
 
 def estimate_half_life(spread):
     """

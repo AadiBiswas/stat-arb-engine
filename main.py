@@ -11,6 +11,7 @@ from src.config import load_config
 from src.export import save_trade_log, save_full_results, save_summary_table
 from src.features import extract_features
 from ml.supervised_model import predict_success  # <- ML model prediction
+from ml.clustering import cluster_features  # <- New: clustering
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Statistical Arbitrage Backtest Runner")
@@ -92,6 +93,10 @@ if __name__ == "__main__":
     # Construct results table
     summary_df = pd.DataFrame(summary_rows)
     feature_df = pd.DataFrame(feature_rows)
+
+    # Perform clustering to assign Regimes
+    clustered_df = cluster_features(feature_df, plot=False)
+    feature_df["Regime"] = clustered_df["Regime"]
 
     # Predict ML success probability for each strategy
     success_probas = predict_success(feature_df)

@@ -2,6 +2,55 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.2] - 2025-07-19
+
+### Added
+- **clustering.py**:
+  - New unsupervised learning module using `KMeans` for regime detection.
+  - Applies clustering to strategy feature vectors and assigns regime labels.
+  - Optionally visualizes cluster structure using PCA.
+  - Saves updated feature set with regime column to `results/features.csv`.
+
+### Enhanced
+- **features.py**:
+  - Added support for regime integration: cluster assignments now tracked per pair.
+  - Modular design supports supervised and unsupervised feature workflows.
+
+- **main.py**:
+  - Integrated regime filtering and ML label threshold from `config.json`.
+  - Now filters final strategies by cluster assignment (`regime_include`) and restricts selection accordingly.
+  - Embeds KMeans clustering step automatically in the backtest pipeline if enabled.
+
+- **supervised_model.py**:
+  - Generalized label logic with config-driven `"ml_label_metric"` and `"ml_label_threshold"`.
+  - Enables flexible definitions of "success" for predictive modeling (e.g., Sharpe > 1, CAGR > 10%, etc.).
+
+- **config.json**:
+  - New keys:
+    - `use_regime_filtering`: whether to apply regime filters to results.
+    - `regime_count`: number of KMeans clusters.
+    - `regime_include`: list of regime IDs to keep.
+    - `ml_label_metric`: which metric to use for labeling success.
+    - `ml_label_threshold`: threshold to classify strategy as "successful".
+
+### Notes
+- This release completes **Phase 4.2–4.3**:
+  - The engine now supports **regime-aware predictive modeling**, opening the door for time-varying strategy gating, clustering-based portfolio filtering, and alpha decomposition across unsupervised regimes.
+  - Clustering is designed to be optional and tunable via config.
+
+- The system supports dual pipelines:
+  - **Supervised** (Random Forest, etc.) to predict success probability.
+  - **Unsupervised** (KMeans) to identify and rank regime clusters.
+
+### Next
+- **Phase 4.4: Intelligent Filtering and Strategy Activation**
+  - Add optional strategy filters based on:
+    - ML-predicted success probability threshold.
+    - Regime-specific exclusions.
+  - Begin integrating regime-tracking in strategy ledger for regime rotation studies.
+  - Add support for GMM or spectral clustering in `clustering.py` for non-linear regime boundaries.
+
+
 ## [0.7.1] - 2025-07-18
 
 ### Added

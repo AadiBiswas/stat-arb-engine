@@ -10,6 +10,7 @@ MODEL_PATH = "models/rf_model.pkl"
 def load_data(feature_path="results/features.csv", label_path="results/strategy_summary.csv", label_metric="Sharpe Ratio", threshold=1.0):
     """
     Merge features and labels; binarize label into success/failure based on threshold.
+    Keeps Regime as a feature.
     """
     features = pd.read_csv(feature_path)
     labels = pd.read_csv(label_path)
@@ -17,7 +18,11 @@ def load_data(feature_path="results/features.csv", label_path="results/strategy_
     merged = pd.merge(features, labels, on="Pair")
     merged["Success"] = (merged[label_metric] >= threshold).astype(int)
 
-    X = merged.drop(columns=["Pair", label_metric, "Success"])
+    drop_cols = ["Pair", "Success"]
+    if label_metric in merged.columns:
+        drop_cols.append(label_metric)
+
+    X = merged.drop(columns=drop_cols, errors="ignore")
     y = merged["Success"]
 
     return X, y, merged
@@ -40,15 +45,23 @@ def evaluate_model(clf, X, y):
     print(classification_report(y, y_pred))
 
 def predict_success(features_df, model_path=MODEL_PATH):
+    """
+    Predict probability of success from features (including Regime).
+    """
     if not os.path.exists(model_path):
         print("[Warning] No trained model found. Skipping prediction.")
-        return pd.Series([1.0] * len(features_df))  # assume full success
+        return pd.Series([1.0] * len(features_df))  # optimistic default
 
     clf = joblib.load(model_path)
-    X = features_df.drop(columns=["Pair"], errors="ignore")
+
+    drop_cols = ["Pair"]
+    if "Success" in features_df.columns:
+        drop_cols.append("Success")
+
+    X = features_df.drop(columns=drop_cols, errors="ignore")
     probas = clf.predict_proba(X)[:, 1]
     return pd.Series(probas, index=features_df.index)
-    
+
 if __name__ == "__main__":
     X, y, merged = load_data(threshold=1.0)
     clf = train_random_forest(X, y)

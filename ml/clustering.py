@@ -9,8 +9,13 @@ import os
 
 CLUSTER_MODEL_PATH = "models/kmeans_model.pkl"
 
-
-def cluster_features(feature_path="results/features.csv", n_clusters=3, save_model=True, plot=False):
+def cluster_features(
+    feature_path="results/features.csv",
+    n_clusters=3,
+    save_model=True,
+    plot=False,
+    summary=True
+):
     df = pd.read_csv(feature_path)
     X = df.drop(columns=["Pair"], errors="ignore")
 
@@ -25,7 +30,7 @@ def cluster_features(feature_path="results/features.csv", n_clusters=3, save_mod
         joblib.dump(kmeans, CLUSTER_MODEL_PATH)
         print(f"[Saved] KMeans model to {CLUSTER_MODEL_PATH}")
 
-    df.to_csv("results/features.csv", index=False)  # overwrite with regime
+    df.to_csv("results/features.csv", index=False)
     print("[Saved] Cluster labels added to 'results/features.csv'")
 
     if plot:
@@ -46,8 +51,19 @@ def cluster_features(feature_path="results/features.csv", n_clusters=3, save_mod
         plt.tight_layout()
         plt.show()
 
+    if summary:
+        if "Sharpe Ratio" in df.columns and "ML_Predicted_Success_Prob" in df.columns:
+            regime_summary = df.groupby("Regime").agg({
+                "Pair": "count",
+                "Sharpe Ratio": "mean",
+                "ML_Predicted_Success_Prob": "mean"
+            }).rename(columns={"Pair": "Strategy Count"})
+            print("\n[Cluster Summary]")
+            print(regime_summary.round(3))
+        else:
+            print("\n[Info] Sharpe/ML columns not found for regime summary.")
+
     return df
 
-
 if __name__ == "__main__":
-    cluster_features(plot=True)
+    cluster_features(plot=True, summary=True)

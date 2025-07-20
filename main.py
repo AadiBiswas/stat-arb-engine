@@ -10,15 +10,14 @@ from src.backtest import backtest_pair, compute_metrics
 from src.config import load_config
 from src.export import save_trade_log, save_full_results, save_summary_table
 from src.features import extract_features
-from ml.supervised_model import predict_success  # <- ML model prediction
-from ml.clustering import cluster_features  # <- New: clustering
+from ml.supervised_model import predict_success
+from ml.clustering import cluster_features
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Statistical Arbitrage Backtest Runner")
     parser.add_argument("--config", type=str, default="config.json", help="Path to experiment config JSON")
     args = parser.parse_args()
 
-    # Load config from JSON
     config = load_config(args.config)
 
     tickers = config.get("tickers", [])
@@ -32,7 +31,6 @@ if __name__ == "__main__":
         print("Price data download failed. Please check ticker list or internet connection.")
         exit()
 
-    # Step 1: Find cointegrated pairs
     coint_pairs = find_cointegrated_pairs(df, significance=config.get("significance", 0.1))
     print("\nCointegrated Pairs:")
     for pair in coint_pairs:
@@ -90,19 +88,32 @@ if __name__ == "__main__":
         print("No backtests succeeded.")
         exit()
 
-    # Construct results table
     summary_df = pd.DataFrame(summary_rows)
     feature_df = pd.DataFrame(feature_rows)
 
-    # Perform clustering to assign Regimes
-    clustered_df = cluster_features(feature_df, plot=False)
+    # Apply clustering
+    clustered_df = cluster_features(
+        feature_path="results/features.csv",
+        n_clusters=config.get("regime_count", 3),
+        plot=False
+    )
     feature_df["Regime"] = clustered_df["Regime"]
 
-    # Predict ML success probability for each strategy
-    success_probas = predict_success(feature_df)
+    # Regime filtering
+    if config.get("use_regime_filtering", False):
+        allowed_regimes = set(config.get("regime_include", []))
+        initial_count = len(feature_df)
+        feature_df = feature_df[feature_df["Regime"].isin(allowed_regimes)]
+        summary_df = summary_df[summary_df["Pair"].isin(feature_df["Pair"])]
+        filtered_count = len(feature_df)
+        print(f"\n[Regime Filter] Retained {filtered_count}/{initial_count} strategies from regimes {sorted(allowed_regimes)}.")
+
+    # Predict ML success probabilities (global vs regime models)
+    use_regime_models = config.get("use_regime_models", False)
+    success_probas = predict_success(feature_df, use_regime_models=use_regime_models)
     summary_df["ML_Predicted_Success_Prob"] = success_probas
 
-    # Sort using ML and Sharpe
+    # Sort by ML + Sharpe
     summary_df.sort_values(by=["ML_Predicted_Success_Prob", "Sharpe Ratio"], ascending=False, inplace=True)
     top_df = summary_df.head(top_n)
 

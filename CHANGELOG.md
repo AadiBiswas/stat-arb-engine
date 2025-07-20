@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.3] - 2025-07-17
+
+### Added
+- **supervised_model.py**:
+  - Added support for **regime-specific model training and prediction**.
+  - Trains one RandomForestClassifier per regime based on cluster labels.
+  - Automatically loads correct model per strategy during inference.
+  - Falls back to global model if per-regime model is missing or `use_regime_models` is disabled.
+
+- **config.json**:
+  - Introduced new flag: `"use_regime_models"` to toggle regime-specific ML classification.
+  - Defaults to `false` for backward compatibility.
+
+### Enhanced
+- **main.py**:
+  - Passes `"use_regime_models"` config to prediction function.
+  - Allows filtering strategies by cluster label using `"use_regime_filtering"` and `"regime_include"` flags.
+  - Displays retained strategy count after regime gating.
+  - Maintains compatibility with global prediction logic.
+
+- **clustering.py**:
+  - Modularized regime clustering with PCA-based visual inspection.
+  - Appends cluster label `"Regime"` to `features.csv` and saves model for reuse.
+  - Configurable `n_clusters` for flexible experimentation.
+
+### Notes
+- This concludes **Phase 4.4**: Regime-Aware Prediction Routing
+  - Meta-learning now accounts for **structural heterogeneity** in strategy types.
+  - Each regime (cluster) can now have **bespoke alpha classifiers**.
+  - Pipeline handles multi-regime training, prediction, and evaluation without manual intervention.
+
+- Fully backward compatible: if `"use_regime_models"` is off, the global model is used as fallback.
+
+### Next
+- **Phase 4.5 (Optional Advanced Layer)**:
+  - Train a **regime classifier** to predict market regime from raw data (price, volume, macro).
+  - Combine with **regime-to-strategy lookup** for full dynamic activation.
+  - Incorporate **meta-meta learning**: use performance metrics to dynamically shift between strategies/models.
+
+
 ## [0.7.2] - 2025-07-19
 
 ### Added

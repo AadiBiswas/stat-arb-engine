@@ -8,9 +8,12 @@
   "stop_loss": null,
   "significance": 0.1,
   "top_n": 3,
+
   "use_regime_filtering": true,
   "regime_count": 3,
   "regime_include": [0, 1, 2],
+
   "ml_label_metric": "Sharpe Ratio",
-  "ml_label_threshold": 1.0
+  "ml_label_threshold": 1.0,
+  "use_regime_models": true
 }

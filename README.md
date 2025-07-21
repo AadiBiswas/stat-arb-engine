@@ -22,10 +22,10 @@ This project implements a scalable, modular **statistical arbitrage engine** for
 ## Metrics (Planned and Ongoing)
 - ✅ Cumulative Return  
 - ✅ Trade Signals and PnL  
-- ⏳ Sharpe Ratio  
-- ⏳ Max Drawdown  
-- ⏳ Win Ratio, Trade Count  
-- ⏳ CAGR, Exposure Time  
+- ✅ Sharpe Ratio  
+- ✅ Max Drawdown  
+- ✅ Win Ratio, Trade Count  
+- ✅ CAGR, Exposure Time  
 
 ## Execution Model (Planned)
 - Capital base and leverage support  

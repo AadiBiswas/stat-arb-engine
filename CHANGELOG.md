@@ -2,7 +2,51 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.7.3] - 2025-07-17
+## [0.8.0] - 2025-07-21
+
+### Added
+- **streamlit_app.py**:
+  - Interactive dashboard using **Streamlit**.
+  - Runs full pipeline: loads config → downloads price data → computes spreads/signals → backtests → clusters features → predicts ML success → displays top strategies.
+  - Includes dynamic **capital trajectory plots** for top-performing pair.
+  - Sidebar input for config file path and full pipeline trigger.
+
+- **.env support + Alpaca integration**:
+  - Added `.env` file parsing via `python-dotenv`.
+  - Introduced fallback logic in `loader.py`:
+    - If `mode="live"` and valid Alpaca keys exist in `.env`, live price is fetched via `alpaca-trade-api`.
+    - Falls back to historical mode (via Yahoo Finance) if API fails or credentials are missing.
+
+- **Live mode suffix** for data persistence:
+  - When using Alpaca, downloaded prices are saved with a `_live_YYYYMMDD_HHMMSS.csv` suffix for traceability.
+
+### Enhanced
+- **loader.py**:
+  - Unified live + historical price ingestion into a single function via `mode` switch.
+  - Live ingestion supports **Alpaca paper trading** account by default (`https://paper-api.alpaca.markets`).
+  - Enhanced error handling for partial failures and ticker retries.
+  - CSV export structure now consistent for both modes.
+
+- **project structure**:
+  - Streamlit dashboard connects directly to pipeline modules (`src`, `ml`) via import paths.
+  - Compatible with prior backtest structure (no changes to core config or strategy logic).
+
+### Notes
+- This release begins **Phase 5: Live Feed + Infrastructure**:
+  - The engine now supports **real-time data ingestion**, **interactive dashboards**, and eventual CI/CD deployment.
+  - Alpaca API usage paves the way for forward-looking simulation, execution routing, or event-based strategy activation.
+
+- The pipeline remains fully backward compatible:
+  - `"mode"` argument is optional and defaults to `"historical"` (Yahoo Finance).
+
+### Next
+- **Phase 5.2–5.4**:
+  - Implement alert system (email/slack/telegram) for live strategy triggers.
+  - Add CI/CD pipeline for deployment to web host or cloud.
+  - Enable periodic scheduler (cron or Streamlit Cloud) for continuous pipeline refresh.
+
+
+## [0.7.3] - 2025-07-20
 
 ### Added
 - **supervised_model.py**:

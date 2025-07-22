@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 from src.loader import download_prices
 from src.coint import find_cointegrated_pairs
+from src.alpaca_loader import fetch_historical_data
 from src.strategy import compute_spread, generate_signals
 from src.backtest import backtest_pair, compute_metrics
 from src.config import load_config
@@ -16,13 +17,34 @@ from ml.clustering import cluster_features
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Statistical Arbitrage Backtest Runner")
     parser.add_argument("--config", type=str, default="config.json", help="Path to experiment config JSON")
+    parser.add_argument("--data_source", type=str, choices=["yfinance", "alpaca"],
+                        help="Override data source (yfinance or alpaca)")
     args = parser.parse_args()
-
-    config = load_config(args.config)
+    config = load_config(args.config, override_source=args.data_source)
 
     tickers = config.get("tickers", [])
-    top_n = config.get("top_n", 3)
-    df = download_prices(tickers)
+    data_source = config.get("data_source", "yfinance").lower()
+
+    if data_source == "alpaca":
+        print("[Data Source] Using Alpaca API...")
+        dfs = []
+        for ticker in tickers:
+            df = fetch_historical_data(ticker, days=config.get("days", 90), timeframe=config.get("timeframe", "day"))
+            if df.empty:
+                print(f"[Warning] No data for {ticker}. Skipping.")
+            else:
+                df.set_index("datetime", inplace=True)
+                dfs.append(df["close"].rename(ticker))
+
+        if not dfs:
+            print("[Error] No valid data returned from Alpaca.")
+            exit()
+        
+        df = pd.concat(dfs, axis=1)
+    else:
+        print("[Data Source] Using yfinance...")
+        df = download_prices(tickers)
+
 
     if not isinstance(df.index, pd.DatetimeIndex):
         df.index = pd.to_datetime(df.index)

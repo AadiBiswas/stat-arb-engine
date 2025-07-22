@@ -15,5 +15,9 @@
 
   "ml_label_metric": "Sharpe Ratio",
   "ml_label_threshold": 1.0,
-  "use_regime_models": true
+  "use_regime_models": true,
+
+  "data_source": "alpaca",           // options: "alpaca" or "yfinance"
+  "days": 90,                        // number of historical days for Alpaca
+  "timeframe": "day"                // options: "minute", "hour", or "day"
 }

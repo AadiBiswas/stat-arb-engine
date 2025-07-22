@@ -2,6 +2,50 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.1] - 2025-07-23
+
+### Added
+- **alpaca_loader.py**:
+  - Dedicated loader module for real-time market data via Alpaca API.
+  - Supports minute-level OHLCV data with API key loading from `.env`.
+
+- **test_yf.py**:
+  - Sanity check for Yahoo Finance; verifies ticker accessibility and alerts on API blackouts or delistings.
+
+### Enhanced
+- **main.py**:
+  - Added support for CLI override of `data_source` (historical vs. live).
+  - Integrates fallback safety for empty DataFrames or failed tickers.
+  - CLI now dynamically determines ingestion source without config edits.
+
+- **config.json**:
+  - Added `"data_source": "historical"` as default toggle for live/historical routing.
+  - Fully backward compatible — existing workflows continue unchanged unless overridden.
+
+- **config.py**:
+  - CLI-parsed keys (e.g., `--data_source`) now override JSON file inputs.
+  - Enables flexible experimentation and scripting from the command line.
+
+### Notes
+- This completes **Phase 5.1: Logging + Refresh Hooks** and begins **Phase 5.2: Live Feed Integration**:
+  - Pipeline can now ingest **real-time price data from Alpaca**, allowing for forward-looking backtests and live deployments.
+
+- The new `--data_source` CLI flag ensures fast switching between modes:
+  - `--data_source historical` → uses Yahoo Finance
+  - `--data_source live` → pulls real-time bars via Alpaca API
+
+- `.env` file must include `APCA_API_KEY_ID` and `APCA_API_SECRET_KEY` for live mode to work.
+
+### Next
+- **Phase 5.3: Interactive Dashboards**
+  - Visualize real-time strategy evolution via Streamlit or Dash.
+  - Add config upload, top strategy tracking, and capital trajectory plotting.
+
+- **Phase 5.4: CI/CD + Alerts**
+  - Build auto-refresh logic, deployable cron jobs, and live signal webhooks.
+  - Set up cloud deployment for 24/7 strategy activation or alerts.
+
+
 ## [0.8.0] - 2025-07-21
 
 ### Added

@@ -2,7 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.8.1] - 2025-07-23
+## [0.8.2] - 2025-07-23
+
+### Added
+- **.env.example**:
+  - Template file showcasing required environment variables for live Alpaca integration.
+  - Includes fields for `ALPACA_API_KEY`, `ALPACA_SECRET_KEY`, and API URLs.
+  - Simplifies onboarding for contributors and CI environments.
+
+- **.github/workflows/ci.yml**:
+  - GitHub Actions CI pipeline for automated linting and runtime validation.
+  - Executes formatting checks (`black`, `flake8`) and runs `main.py` with default config.
+  - Ensures environment consistency, error catching, and repo hygiene.
+
+### Enhanced
+- **Live mode integration**:
+  - Fully functional toggle between **Yahoo Finance** and **Alpaca** data ingestion.
+  - CLI and config JSON both support live/historical routing via `"data_source"` key or `--data_source` flag.
+  - Environment credentials now abstracted to `.env`, improving security and modularity.
+
+- **Directory structure**:
+  - `alpaca_loader.py` added to `/src`, cleanly separating data access logic from strategy codebase.
+  - Improved modularity and testing potential.
+
+### Notes
+- This completes **Phase 5.2: Live Feed Integration** and **Phase 5.4: CI/CD Infrastructure**.
+- Real-time ingestion can now be triggered locally or via CI, with fallback logic and logging.
+- Project now includes `.env.example` and `ci.yml`—aligning with open-source best practices.
+
+### Next
+- **V2 (Optional?)**:
+  - Add REST API endpoints for remote access and webhook activation.
+  - Extend Streamlit dashboard with session state, live logs, and uploadable config interface.
+  - Prepare for cloud deployment (Render, Streamlit Cloud, or AWS Lambda).
+
+
+## [0.8.1] - 2025-07-22
 
 ### Added
 - **alpaca_loader.py**:

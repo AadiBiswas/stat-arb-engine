@@ -5,6 +5,7 @@ scipy
 statsmodels
 scikit-learn
 xgboost
-yfinance
+yfinance==0.2.28
 tabulate   # for cleaner CLI tables
 seaborn    # if plotting enhancements are planned
+websockets

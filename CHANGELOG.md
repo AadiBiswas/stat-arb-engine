@@ -2,6 +2,57 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2025-07-24
+
+### Added
+- **README overhaul**:
+  - Added full live/historical CLI instructions, dashboard usage, and `.env` guidance.
+  - Detailed CLI argument descriptions and interactive pipeline options.
+
+- **streamlit_app.py**:
+  - Live dashboard updated with capital trajectory plots and configuration uploads.
+  - Runs full ML + backtest pipeline inside browser.
+
+- **.env.example**:
+  - Provides a public-safe template for required environment variables.
+  - Enables quick onboarding for new users or CI/CD workflows.
+
+- **project structure summary**:
+  - README now includes a section detailing directory layout and key modules for clarity.
+
+### Enhanced
+- **main.py**:
+  - Clean toggle between Yahoo Finance and Alpaca via CLI (`--data_source`).
+  - CLI parameters fully override config file for modular experimentation.
+
+- **src/**:
+  - Modularized `alpaca_loader.py` for live price ingestion and fallback logic.
+  - Improved error handling and logging for real-time data ingestion.
+
+- **CI Pipeline**:
+  - GitHub Actions now verifies environment setup and runtime integrity.
+  - Added auto-formatting checks (`black`, `flake8`) and runtime test via `main.py`.
+
+### Notes
+- This marks the **1.0.0 full release** of the Statistical Arbitrage Engine.
+- The system supports:
+  - **Dynamic CLI** overrides
+  - **Live + Historical** routing
+  - **Streamlit dashboards**
+  - **ML-powered scoring**
+  - **Modular ingestion and simulation pipelines**
+  - **CI/CD setup via GitHub Actions**
+
+- Fully backwards compatible with historical-only pipelines.
+- Ready for future extensions into REST APIs, scheduled refresh, or live deployment.
+
+### Next
+- **1.1.x (Planned? Optional? PR?)**:
+  - Live strategy alerts via email, Slack, or webhooks.
+  - Cloud deploy to Streamlit Cloud, Render, or AWS Lambda.
+  - RESTful interface for remote strategy control and trigger monitoring.
+
+
 ## [0.8.2] - 2025-07-23
 
 ### Added
